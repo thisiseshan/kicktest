@@ -15,75 +15,113 @@ class ViewController: UIViewController {
 
     @IBAction func newGame(_ sender: Any) {
     
-        let sdk = StellarSDK()
+       
         
-        sdk.accounts.getAccountDetails(accountId: "GAWE7LGEFNRN3QZL5ILVLYKKKGGVYCXXDCIBUJ3RVOC2ZWW6WLGK76TJ") { (response) -> (Void) in
+        // create a completely new and unique pair of keys.
+        let keyPair = try! KeyPair.generateRandomKeyPair()
+        
+        print("Account Id: " + keyPair.accountId)
+        // GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB
+        
+        print("Secret Seed: " + keyPair.secretSeed)
+        // SAV76USXIJOBMEQXPANUOQM6F5LIOTLPDIDVRJBFFE2MDJXG24TAPUU7
+
+        
+    
+        // Ask the SDK to create a testnet account for you. It’ll ask the Sellar Testnet Friendbot to create the account.
+        sdk.accounts.createTestAccount(accountId: keyPair.accountId) { (response) -> (Void) in
             switch response {
-            case .success(let accountResponse):
-                print("Account ID: \(accountResponse.accountId)")
-                print("Account Sequence: \(accountResponse.sequenceNumber)")
-                for balance in accountResponse.balances {
-                    if balance.assetType == AssetTypeAsString.NATIVE {
-                        print("Account balance: \(balance.balance) XLM")
-                    } else {
-                        print("Account balance: \(balance.balance) \(balance.assetCode!) of issuer: \(balance.assetIssuer!)")
-                    }
-                }
+            case .success(let details):
+                print(details)
             case .failure(let error):
-                print(error.localizedDescription)
+                StellarSDKLog.printHorizonRequestErrorMessage(tag:"Error:", horizonRequestError: error)
             }
         }
         
         
+        // Destination Account
+        
+        // create a completely new and unique pair of keys.
+        let keyPair2 = try! KeyPair.generateRandomKeyPair()
+        
+        print("Account Id: " + keyPair2.accountId)
+        // GCWODM5VN44LFRFSWLEU7TOAD366BBRT4UMUCV4KDZWQC3DKJAFI5BN6
+        
+        print("Secret Seed: " + keyPair2.secretSeed)
+        // SD42ITDCOSG6N6SFKU4DYSUSDB7CTU5CE3WYRKSY45Y7CLRUHBECWNV5
+        
+        
+        
+        // Ask the SDK to create a testnet account for you. It’ll ask the Sellar Testnet Friendbot to create the account.
+        sdk.accounts.createTestAccount(accountId: keyPair2.accountId) { (response) -> (Void) in
+            switch response {
+            case .success(let details):
+                print(details)
+            case .failure(let error):
+                StellarSDKLog.printHorizonRequestErrorMessage(tag:"Error:", horizonRequestError: error)
+            }
+        }
+        
+        
+       
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) { // Change `2.0` to the desired number of seconds.
+            // Code you want to be delayed
+        
         
         do {
-        let sourceAccountKeyPair = try KeyPair(secretSeed:"SA3QF6XW433CBDLUEY5ZAMHYJLJNHBBOPASLJLO4QKH75HRRXZ3UM2YJ")
-        let destinationAccountKeyPair = try KeyPair(accountId: "GCKECJ5DYFZUX6DMTNJFHO2M4QKTUO5OS5JZ4EIIS7C3VTLIGXNGRTRC")
-            
-            
+        let sourceAccountKeyPair = try KeyPair(secretSeed: String(keyPair.secretSeed))
+        
+        print (sourceAccountKeyPair)
+        
+        let destinationAccountKeyPair = try KeyPair(accountId: String(keyPair2.accountId))
+        
+        print(destinationAccountKeyPair)
             
             sdk.accounts.getAccountDetails(accountId: sourceAccountKeyPair.accountId) { (response) -> (Void) in
                 switch response {
-                case .success(let accountResponse): // account exists
+                case .success(let accountResponse):
                     do {
-                        // create the payment operation
-                        let paymentOperation = PaymentOperation(sourceAccount: sourceAccountKeyPair,
-                                                                destination: destinationAccountKeyPair,
+                        // build the payment operation
+                        let paymentOperation = PaymentOperation(destination: destinationAccountKeyPair,
                                                                 asset: Asset(type: AssetType.ASSET_TYPE_NATIVE)!,
-                                                                amount: 10.0)
+                                                                amount: 10.5)
                         
-                        // create the transaction containing the payment operation
+                        // build the transaction containing our payment operation.
                         let transaction = try Transaction(sourceAccount: accountResponse,
                                                           operations: [paymentOperation],
                                                           memo: Memo.none,
                                                           timeBounds:nil)
-                        
-                        // Sign the transaction to prove you are actually the person sending it.
+                        // sign the transaction
                         try transaction.sign(keyPair: sourceAccountKeyPair, network: Network.testnet)
                         
-                        // And finally, send it off to Stellar!
+                        // submit the transaction.
                         try sdk.transactions.submitTransaction(transaction: transaction) { (response) -> (Void) in
                             switch response {
                             case .success(_):
-                                print("Transaction successfully sent!")
+                                print("Success")
                             case .failure(let error):
-                                StellarSDKLog.printHorizonRequestErrorMessage(tag:"Sample", horizonRequestError:error)
+                                StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
                             }
                         }
                     } catch {
-                        print ("...")
+                        //...
                     }
                 case .failure(let error):
-                    StellarSDKLog.printHorizonRequestErrorMessage(tag:"Sample", horizonRequestError:error)
-                    
+                    StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
                 }
             }
-        } catch {
-            print("...")
+            
+            
+            
         }
-      
-       
-
+        catch {
+            
+        }
+        
+        }
+        
+        
         
         
     }
