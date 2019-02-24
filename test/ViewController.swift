@@ -13,6 +13,9 @@ import stellarsdk
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var label3: UILabel!
+    @IBOutlet weak var label2: UILabel!
+    @IBOutlet weak var label1: UILabel!
     @IBAction func newGame(_ sender: Any) {
     
        
@@ -32,7 +35,13 @@ class ViewController: UIViewController {
         sdk.accounts.createTestAccount(accountId: keyPair.accountId) { (response) -> (Void) in
             switch response {
             case .success(let details):
+                DispatchQueue.main.async {
+                    
+                    self.label1.text = "Account 1 created"
+                    
+                }
                 print(details)
+                
             case .failure(let error):
                 StellarSDKLog.printHorizonRequestErrorMessage(tag:"Error:", horizonRequestError: error)
             }
@@ -56,7 +65,13 @@ class ViewController: UIViewController {
         sdk.accounts.createTestAccount(accountId: keyPair2.accountId) { (response) -> (Void) in
             switch response {
             case .success(let details):
+                DispatchQueue.main.async {
+                    
+                    self.label2.text = "Account 2 created"
+                    
+                }
                 print(details)
+                
             case .failure(let error):
                 StellarSDKLog.printHorizonRequestErrorMessage(tag:"Error:", horizonRequestError: error)
             }
@@ -65,7 +80,7 @@ class ViewController: UIViewController {
         
        
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) { // Change `2.0` to the desired number of seconds.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Change `2.0` to the desired number of seconds.
             // Code you want to be delayed
         
         
@@ -77,6 +92,10 @@ class ViewController: UIViewController {
         let destinationAccountKeyPair = try KeyPair(accountId: String(keyPair2.accountId))
         
         print(destinationAccountKeyPair)
+
+            
+            
+            
             
             sdk.accounts.getAccountDetails(accountId: sourceAccountKeyPair.accountId) { (response) -> (Void) in
                 switch response {
@@ -90,20 +109,54 @@ class ViewController: UIViewController {
                         // build the transaction containing our payment operation.
                         let transaction = try Transaction(sourceAccount: accountResponse,
                                                           operations: [paymentOperation],
-                                                          memo: Memo.none,
+                                                          memo: Memo.text("[1,0,1,0,1,0,1,0,1]"),
                                                           timeBounds:nil)
+                        
+                        
                         // sign the transaction
                         try transaction.sign(keyPair: sourceAccountKeyPair, network: Network.testnet)
+                        
+                        
                         
                         // submit the transaction.
                         try sdk.transactions.submitTransaction(transaction: transaction) { (response) -> (Void) in
                             switch response {
-                            case .success(_):
-                                print("Success")
-                            case .failure(let error):
-                                StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
+                                case .success(_):
+                                    print("Success")
+                                    DispatchQueue.main.async {
+                                        
+                                       self.label3.text = " Array stored"
+                                        
+                                }
+                        
+                                case .failure(let error):
+                                    StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
+                                    sdk.payments.stream(for: .paymentsForAccount(account: destinationAccountKeyPair.accountId, cursor: "now")).onReceive { (response) -> (Void) in
+                                        switch response {
+                                        case .open:
+                                            break
+                                        case .response(let id, let operationResponse):
+                                            if let paymentResponse = operationResponse as? PaymentOperationResponse {
+                                                switch paymentResponse.assetType {
+                                                case AssetTypeAsString.NATIVE:
+                                                    print("Payment of \(paymentResponse.amount) XLM from \(paymentResponse.sourceAccount) received -  id \(id)" )
+                                                default:
+                                                    print("Payment of \(paymentResponse.amount) \(paymentResponse.assetCode!) from \(paymentResponse.sourceAccount) received -  id \(id)" )
+                                                }
+                                            }
+                                        case .error(let error):
+                                            if let horizonRequestError = error as? HorizonRequestError {
+                                                StellarSDKLog.printHorizonRequestErrorMessage(tag:"Receive payment", horizonRequestError:horizonRequestError)
+                                            } else {
+                                                print("Error \(error?.localizedDescription ?? "")") // Other error like e.g. streaming error, you may want to ignore this.
+                                            }
+                                        }
+                                }
                             }
+                            
                         }
+            
+                        
                     } catch {
                         //...
                     }
@@ -113,6 +166,19 @@ class ViewController: UIViewController {
             }
             
             
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+            
+
+                
+                
+                
+                
+                
+                
+                
+            
+            
+            
             
         }
         catch {
@@ -120,6 +186,12 @@ class ViewController: UIViewController {
         }
         
         }
+        
+        
+        
+        
+        
+        
         
         
         
