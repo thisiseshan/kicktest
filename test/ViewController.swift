@@ -9,16 +9,16 @@
 import UIKit
 import stellarsdk
 
- let sdk = StellarSDK()
+let sdk = StellarSDK()
 
 class ViewController: UIViewController {
-
+    
     @IBOutlet weak var label3: UILabel!
     @IBOutlet weak var label2: UILabel!
     @IBOutlet weak var label1: UILabel!
     @IBAction func newGame(_ sender: Any) {
-    
-       
+        
+        
         
         // create a completely new and unique pair of keys.
         let keyPair = try! KeyPair.generateRandomKeyPair()
@@ -28,9 +28,9 @@ class ViewController: UIViewController {
         
         print("Secret Seed: " + keyPair.secretSeed)
         // SAV76USXIJOBMEQXPANUOQM6F5LIOTLPDIDVRJBFFE2MDJXG24TAPUU7
-
         
-    
+        
+        
         // Ask the SDK to create a testnet account for you. It’ll ask the Sellar Testnet Friendbot to create the account.
         sdk.accounts.createTestAccount(accountId: keyPair.accountId) { (response) -> (Void) in
             switch response {
@@ -78,57 +78,52 @@ class ViewController: UIViewController {
         }
         
         
-       
+        
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { // Change `2.0` to the desired number of seconds.
             // Code you want to be delayed
-        
-        
-        do {
-        let sourceAccountKeyPair = try KeyPair(secretSeed: String(keyPair.secretSeed))
-        
-        print (sourceAccountKeyPair)
-        
-        let destinationAccountKeyPair = try KeyPair(accountId: String(keyPair2.accountId))
-        
-        print(destinationAccountKeyPair)
-
             
             
-            
-            
-            sdk.accounts.getAccountDetails(accountId: sourceAccountKeyPair.accountId) { (response) -> (Void) in
-                switch response {
-                case .success(let accountResponse):
-                    do {
-                        // build the payment operation
-                        let paymentOperation = PaymentOperation(destination: destinationAccountKeyPair,
-                                                                asset: Asset(type: AssetType.ASSET_TYPE_NATIVE)!,
-                                                                amount: 10.5)
-                        
-                        // build the transaction containing our payment operation.
-                        let transaction = try Transaction(sourceAccount: accountResponse,
-                                                          operations: [paymentOperation],
-                                                          memo: Memo.text("[1,0,1,0,1,0,1,0,1]"),
-                                                          timeBounds:nil)
-                        
-                        
-                        // sign the transaction
-                        try transaction.sign(keyPair: sourceAccountKeyPair, network: Network.testnet)
-                        
-                        
-                        
-                        // submit the transaction.
-                        try sdk.transactions.submitTransaction(transaction: transaction) { (response) -> (Void) in
-                            switch response {
+            do {
+                let sourceAccountKeyPair = try KeyPair(secretSeed: String(keyPair.secretSeed))
+                
+                print (sourceAccountKeyPair)
+                
+                let destinationAccountKeyPair = try KeyPair(accountId: String(keyPair2.accountId))
+                
+                print(destinationAccountKeyPair)
+                
+                sdk.accounts.getAccountDetails(accountId: sourceAccountKeyPair.accountId) { (response) -> (Void) in
+                    switch response {
+                    case .success(let accountResponse):
+                        do {
+                            // build the payment operation
+                            let paymentOperation = PaymentOperation(destination: destinationAccountKeyPair,
+                                                                    asset: Asset(type: AssetType.ASSET_TYPE_NATIVE)!,
+                                                                    amount: 10.5)
+                            
+                            // build the transaction containing our payment operation.
+                            let transaction = try Transaction(sourceAccount: accountResponse,
+                                                              operations: [paymentOperation],
+                                                              memo: Memo.text("[1,0,1,0,1,0,1,0,1]"),
+                                                              timeBounds:nil)
+                            
+                            // sign the transaction
+                            try transaction.sign(keyPair: sourceAccountKeyPair, network: Network.testnet)
+                            
+                            
+                            
+                            // submit the transaction.
+                            try sdk.transactions.submitTransaction(transaction: transaction) { (response) -> (Void) in
+                                switch response {
                                 case .success(_):
                                     print("Success")
                                     DispatchQueue.main.async {
                                         
-                                       self.label3.text = " Array stored"
+                                        self.label3.text = " Array stored"
                                         
-                                }
-                        
+                                    }
+                                    
                                 case .failure(let error):
                                     StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
                                     sdk.payments.stream(for: .paymentsForAccount(account: destinationAccountKeyPair.accountId, cursor: "now")).onReceive { (response) -> (Void) in
@@ -151,50 +146,29 @@ class ViewController: UIViewController {
                                                 print("Error \(error?.localizedDescription ?? "")") // Other error like e.g. streaming error, you may want to ignore this.
                                             }
                                         }
+                                    }
                                 }
+                                
                             }
                             
+                            
+                        } catch {
+                            //...
                         }
-            
-                        
-                    } catch {
-                        //...
+                    case .failure(let error):
+                        StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
                     }
-                case .failure(let error):
-                    StellarSDKLog.printHorizonRequestErrorMessage(tag:"SRP Test", horizonRequestError:error)
                 }
+                
+                
+                //            DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+                
+            }
+            catch {
+                
             }
             
-            
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
-            
-
-                
-                
-                
-                
-                
-                
-                
-            
-            
-            
-            
         }
-        catch {
-            
-        }
-        
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
     }
     
@@ -211,7 +185,7 @@ class ViewController: UIViewController {
         
     }
     
-
-
+    
+    
 }
 
