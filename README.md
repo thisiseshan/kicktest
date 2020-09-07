@@ -1,7 +1,7 @@
 # Kicktest
 
 Deploying Stellar Blockchain on iOS.  
-*This app is created as a companion app for passing tic-tac-toe score as memo of a Stellar transaction from a Rasberry-Pi machine.*
+*This app is created as a companion app for stroing tic-tac-toe score as memo of a Stellar transaction from a Rasberry-Pi machine.*
 
 ## Installation
 
